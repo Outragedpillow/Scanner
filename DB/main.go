@@ -13,7 +13,8 @@ func main() {
     fmt.Println("Failed to Create tables.")
     return;
   }
-  utils.ReadFromResidents(db);
+  utils.ReadResidentsIntoDb(db);
+  utils.ReadComputersIntoDb(db);
 
   if err := server.Serve("1234"); err != nil {
     return;

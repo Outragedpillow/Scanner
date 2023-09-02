@@ -1,43 +1,43 @@
 package sqlite
 
 import (
-  "fmt"
-  // "strconv"
-  "database/sql"
-  _ "github.com/mattn/go-sqlite3"
+	"fmt"
+	// "strconv"
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func CreateTables() (*sql.DB, error) {
-  database, err := sql.Open("sqlite3", "Storage.db")  
-  if err != nil {
-    fmt.Println("Open Error", err);
-    return nil, err;
-  }
+	database, err := sql.Open("sqlite3", "Storage.db")
+	if err != nil {
+		fmt.Println("Open Error", err)
+		return nil, err
+	}
 
-  _, err = database.Exec(`PRAGMA foreign_keys = ON;`);
-  if err != nil {
-    fmt.Println("PRAGMA Error", err);
-    return nil, err;
-  }
+	_, err = database.Exec(`PRAGMA foreign_keys = ON;`)
+	if err != nil {
+		fmt.Println("PRAGMA Error", err)
+		return nil, err
+	}
 
-  _, err = database.Exec(`CREATE TABLE IF NOT EXISTS residents (
+	_, err = database.Exec(`CREATE TABLE IF NOT EXISTS residents (
     name_of TEXT NOT NULL,
     mdoc INTEGER PRIMARY KEY NOT NULL);
-  `);
-  if err != nil {
-    fmt.Println("Create Table Error: Residents.", err);
-    return nil, err;
-  }
-  
-  _, err = database.Exec(`CREATE TABLE IF NOT EXISTS admin (
+  `)
+	if err != nil {
+		fmt.Println("Create Table Error: Residents.", err)
+		return nil, err
+	}
+
+	_, err = database.Exec(`CREATE TABLE IF NOT EXISTS admin (
     name_of TEXT PRIMARY KEY NOT NULL);
-  `);
-  if err != nil {
-    fmt.Println("Create Table Error: Admin.", err);
-    return nil, err;
-  }
-  
-    _, err = database.Exec(`CREATE TABLE IF NOT EXISTS computers (
+  `)
+	if err != nil {
+		fmt.Println("Create Table Error: Admin.", err)
+		return nil, err
+	}
+
+	_, err = database.Exec(`CREATE TABLE IF NOT EXISTS computers (
     serial TEXT PRIMARY KEY NOT NULL,
     tag_number INT NOT NULL,
     is_issued INT NOT NULL,
@@ -47,14 +47,13 @@ func CreateTables() (*sql.DB, error) {
     time_returned TIMESTAMP,
     FOREIGN KEY(signed_out_to) REFERENCES residents(mdoc)
     );
-  `);
-  if err != nil {
-    fmt.Println("Create Table Error: Computers.", err);
-    return nil, err;
-  }
-  
-  
-  triggerStatement := fmt.Sprintf(`
+  `)
+	if err != nil {
+		fmt.Println("Create Table Error: Computers.", err)
+		return nil, err
+	}
+
+	triggerStatement := fmt.Sprintf(`
       CREATE TRIGGER check_issued 
       BEFORE INSERT ON computers 
       BEGIN 
@@ -63,13 +62,12 @@ func CreateTables() (*sql.DB, error) {
               RAISE (ABORT, 'CANNOT ISSUE WITHOUT VALUES FOR signed_out_to and signed_out_by.')
         END;
       END;
-    `);
+    `)
 
-  _, err = database.Exec(triggerStatement);
-  if err != nil {
-    fmt.Println("Trigger creation error:", err)
-  }
+	_, err = database.Exec(triggerStatement)
+	if err != nil {
+		fmt.Println("Trigger creation error:", err)
+	}
 
-  return database, nil;
+	return database, nil
 }
-

@@ -21,6 +21,7 @@ func ReadComputersIntoDb(db *sql.DB) error {
   scanner := bufio.NewScanner(file);
   
   for scanner.Scan() {
+    fmt.Println("Scanning");
     comp := parseComputers(scanner.Text());
     insertErr := insertComputerData(db, comp);
     if insertErr != nil {

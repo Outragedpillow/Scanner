@@ -2,7 +2,7 @@ package api
 
 import (
   // "fmt"
-  "net/http"
+  // "net/http"
 )
 
 type Admin struct {
@@ -26,6 +26,3 @@ type Computer struct {
 }
 
 
-func FindResident(w http.ResponseWriter, r *http.Request) {
-  w.Write([]byte("Hello, World!"));
-}

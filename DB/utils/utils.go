@@ -4,46 +4,124 @@ import (
   "fmt"
   "database/sql"
   _ "github.com/mattn/go-sqlite3"
-  // "strings"
+  "strings"
   "bufio"
   "os"
   // "Scanner/sqlite"
-  "Scanner/api"
+  "Scanner/structs"
+  "strconv"
 )
 
+type Scans struct {
+  Scan1 interface{}
+  Scan2 interface{}
+}
+
+var scanned Scans = Scans{}
+
 func ProcessScan(db *sql.DB) {
+
   scanner := bufio.NewScanner(os.Stdin);
-  for scanner.Scan() {
-    input := scanner.Text();
-    checkScanType(db, input);
+  for { 
+   scanned = Scans{};
+    for i:=0; i<2; i++ {
+      if scanner.Scan() {
+        input := scanner.Text();
+        switch input[0:2] {
+        case "1s":
+          findComputer(db, input);
+        default:
+          resMdoc, convErr := strconv.Atoi(input);
+          if convErr != nil {
+            fmt.Println("Error: Convert ", convErr);
+          }
+          findResident(db, resMdoc);
+        }
+      } 
+    }
+
+    switch scanned.Scan1.(type) {
+      case structs.Computer:
+        if res, ok := scanned.Scan2.(structs.Resident); ok {
+          if comp, ok := scanned.Scan1.(structs.Computer); ok {
+            fmt.Println("Setup for Api");
+            fmt.Println("Signed out to:", res.Name_of, "| Computer number:", comp.Tag_number);  
+          } else {
+          fmt.Println("Error: Wrong combination of scans");
+          }
+        }
+
+      default:
+        fmt.Println("Error: Default wrong combination of scans");
+      }
   }
 } 
 
-func checkScanType(db *sql.DB, input string) {
-  if len(input) == 8 {
-    FindComputer(db, input);
+func findComputer(db *sql.DB, serial string) {
+   var computer structs.Computer;
+
+  fmt.Println("finding Computer")
+
+  // Split input to get just serial number
+  index := strings.Index(serial, "R");
+  if index != -1 {
+    serial = serial[index:];
   }
-}
 
-
-func FindComputer(db *sql.DB, serial string) {
-  var computer api.Computer;
-
-  sqlStatement, prepErr := db.Prepare("SELECT serial, tag_number, is_issued, signed_out_by, signed_out_to, time_issued, time_returned FROM computers WHERE serial = ?");
+  // Prepare statement for select fields of table computer in sqlite and join foreign keys where serial is input from scanner after being sliced
+  sqlStatement, prepErr := db.Prepare("SELECT c.serial, c.tag_number, c.is_issued, a.name_of_a, r.name_of_r, c.time_issued, c.time_returned FROM computers AS c LEFT JOIN admin AS a ON c.signed_out_by = a.name_of_a LEFT JOIN residents AS r ON c.signed_out_to = r.mdoc WHERE serial = ?");
   if prepErr != nil {
-    fmt.Println("Error: Prepare")
+    fmt.Println("Error: Prepare", prepErr)
   }
 
   defer sqlStatement.Close();
 
+  // Execute prepared statement
   row := sqlStatement.QueryRow(serial);
-
-  err := row.Scan(&computer.Serial, &computer.Tag_number, &computer.Signed_out_by, &computer.Signed_out_to, &computer.Time_issued, &computer.Time_returned);
-  if err != nil {
-    if err == sql.ErrNoRows {
-      fmt.Println("No row.")
+  
+  // Iterate over fields of selected row and asssign the values to computer struct 
+  rowErr := row.Scan(&computer.Serial, &computer.Tag_number, &computer.Is_issued, &computer.Signed_out_by.Name_of, &computer.Signed_out_to.Mdoc, &computer.Time_issued, &computer.Time_returned);
+  if rowErr != nil {
+    if rowErr == sql.ErrNoRows {
+      fmt.Println("No row. ", rowErr);
     }
+    fmt.Println(rowErr);
   }
   
   fmt.Println(computer.Tag_number);
+  
+  // tagNumberStr := strconv.Itoa(computer.Tag_number);
+
+  // Set Scan1 as computer for later validation of both scans
+  scanned.Scan1 = computer;
 }
+
+func findResident(db *sql.DB, mdoc int) {
+  var resident structs.Resident;
+
+  fmt.Println("Finding Resident");
+
+  sqlStatement, prepErr := db.Prepare("SELECT mdoc, name_of_r FROM residents WHERE mdoc = ?");
+  if prepErr != nil {
+    fmt.Println("Error: Prepare ", prepErr);
+  }
+
+  defer sqlStatement.Close()
+
+  row := sqlStatement.QueryRow(mdoc);
+
+  rowErr := row.Scan(&resident.Mdoc, &resident.Name_of)
+  if rowErr != nil {
+    if rowErr == sql.ErrNoRows {
+      fmt.Println("Error: No row. ", rowErr);
+    } else {
+      fmt.Println("Error: Row scan error: ", rowErr);
+    }
+  }
+
+  fmt.Println(resident.Name_of)
+
+  scanned.Scan2 = resident;
+}
+
+

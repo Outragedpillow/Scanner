@@ -2,7 +2,6 @@ package server
 
 import (
   "net/http"
-  // "Scanner/api"
 )
 
 func Serve(port string) error {

@@ -21,7 +21,7 @@ func CreateTables() (*sql.DB, error) {
   }
 
   _, err = database.Exec(`CREATE TABLE IF NOT EXISTS residents (
-    name_of TEXT NOT NULL,
+    name_of_r TEXT NOT NULL,
     mdoc INTEGER PRIMARY KEY NOT NULL);
   `);
   if err != nil {
@@ -30,7 +30,7 @@ func CreateTables() (*sql.DB, error) {
   }
   
   _, err = database.Exec(`CREATE TABLE IF NOT EXISTS admin (
-    name_of TEXT PRIMARY KEY NOT NULL);
+    name_of_a TEXT PRIMARY KEY NOT NULL);
   `);
   if err != nil {
     fmt.Println("Create Table Error: Admin.", err);
@@ -46,6 +46,7 @@ func CreateTables() (*sql.DB, error) {
     time_issued TIMESTAMP,
     time_returned TIMESTAMP,
     FOREIGN KEY(signed_out_to) REFERENCES residents(mdoc)
+    FOREIGN KEY(signed_out_by) REFERENCES admin(name_of_a)
     );
   `);
   if err != nil {

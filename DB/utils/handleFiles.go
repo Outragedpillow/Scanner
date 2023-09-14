@@ -16,7 +16,21 @@ const (
   COMPUTERFILE = "./utils/computers.txt"
   RESIDENT_FILE = "./utils/residents.txt"
   HISTORY_FILE = "./utils/history.txt"
+  STORAGE_DB_FILE = "./Storage.db"
 )
+
+func DeleteStorageDb() error {
+  noneErr := os.Remove(STORAGE_DB_FILE);
+  if noneErr != nil {
+    if os.IsNotExist(noneErr) {
+      return nil;
+    }
+    return noneErr;
+  }
+
+  return nil;
+}
+
 
 func ReadFilesIntoDb(db *sql.DB) {
   ReadResidentsIntoDb(db);
@@ -44,17 +58,22 @@ func ReadComputersIntoDb(db *sql.DB) error {
 }
 
 func parseComputers(info string) []string {
-  words := strings.Split(info, " ");
+  words := strings.Fields(info);
+  fmt.Println(len(words[0]))
   if len(words) != 2 {
+    fmt.Println("Error: Less than 2");
     return nil;
   }
 
   if len(words[0]) != 20 {
-    return nil;
+    if len(words[0]) != 23 {
+      fmt.Println("Error: Less than 20");
+      return nil;
+    }
   } 
 
   index := strings.Index(words[0], "R");
-  if index != -1 && index < len(words[0])-1 {
+  if index != -1 {
     words[0] = words[0][index:];
   }
 
@@ -103,7 +122,7 @@ func ReadResidentsIntoDb(db *sql.DB) {
 }
 
 func parseResidents(line string) []string {
-  words := strings.Split(line, " ");
+  words := strings.Fields(line);
   if len(words) != 3 {
     return nil;
   }

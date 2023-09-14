@@ -1,11 +1,3 @@
 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
-Serial: R90YFFFF, Computer Number: 143, Signed out to: {%!s(int=0) }, Signed out by: {}, Time signed out: , Time returned: 
+Resident name: Adams Danny, MDOC: 82921, Computer s/n: R90YFFFD, Computer tag number: 142
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143

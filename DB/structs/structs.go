@@ -19,4 +19,18 @@ type Computer struct {
   Time_returned string `json:"time_returned"`
 }
 
+func ResidentIsEmpty(s Resident) bool {
+  if s.Mdoc == 0 || s.Name_of == "" {
+    return true;
+  }
 
+  return false;
+}
+
+func ComputerIsEmpty(c Computer) bool {
+  if c.Serial == "" || c.Tag_number == 0 {
+    return true;
+  }
+
+  return false;
+}

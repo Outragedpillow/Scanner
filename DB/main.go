@@ -8,6 +8,11 @@ import (
 )
 
 func main() {
+  if deleteErr := utils.DeleteStorageDb(); deleteErr != nil {
+    fmt.Println("Error: Deleting Storage")
+    return;
+  }
+
   db, tableErr := sqlite.CreateTables();
   if tableErr != nil {
     fmt.Println("Failed to Create tables.")

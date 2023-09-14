@@ -23,21 +23,31 @@ func ProcessScan(db *sql.DB) {
 
   scanner := bufio.NewScanner(os.Stdin);
   for { 
-   scanned = Scans{};
+    scanned = Scans{};
     for i:=0; i<2; i++ {
       if scanner.Scan() {
         input := scanner.Text();
-        switch input[0:2] {
-        case "1s":
-          findComputer(db, input);
-        default:
-          resMdoc, convErr := strconv.Atoi(input);
-          if convErr != nil {
-            fmt.Println("Error: Convert ", convErr);
+        if len(input) > 2 {    
+          switch input[0:2] {
+          case "1s":
+            findCompErr := findComputer(db, input);
+            if findCompErr != nil {
+              fmt.Println("Break", findCompErr);
+              break;
+            }
+          default:
+            resMdoc, convErr := strconv.Atoi(input);
+            if convErr != nil {
+              fmt.Println("Error: Convert ", convErr);
+            }
+            findResErr := findResident(db, resMdoc);
+            if findResErr != nil {
+              fmt.Println("Break", findResErr);
+              break;
+            }
           }
-          findResident(db, resMdoc);
-        }
-      } 
+        } 
+      }
     }
 
     switch scanned.Scan1.(type) {
@@ -45,6 +55,8 @@ func ProcessScan(db *sql.DB) {
         if res, ok := scanned.Scan2.(structs.Resident); ok {
           if comp, ok := scanned.Scan1.(structs.Computer); ok {
             fmt.Println("Setup for Api");
+            data := fmt.Sprintf("\nResident name: %s, MDOC: %d, Computer s/n: %s, Computer tag number: %d", res.Name_of, res.Mdoc, comp.Serial, comp.Tag_number);
+            WriteComputerLogs(data);
             fmt.Println("Signed out to:", res.Name_of, "| Computer number:", comp.Tag_number);  
           } else {
           fmt.Println("Error: Wrong combination of scans");
@@ -57,7 +69,7 @@ func ProcessScan(db *sql.DB) {
   }
 } 
 
-func findComputer(db *sql.DB, serial string) {
+func findComputer(db *sql.DB, serial string) error {
    var computer structs.Computer;
 
   fmt.Println("finding Computer")
@@ -72,6 +84,7 @@ func findComputer(db *sql.DB, serial string) {
   sqlStatement, prepErr := db.Prepare("SELECT c.serial, c.tag_number, c.is_issued, a.name_of_a, r.name_of_r, c.time_issued, c.time_returned FROM computers AS c LEFT JOIN admin AS a ON c.signed_out_by = a.name_of_a LEFT JOIN residents AS r ON c.signed_out_to = r.mdoc WHERE serial = ?");
   if prepErr != nil {
     fmt.Println("Error: Prepare", prepErr)
+    return prepErr;
   }
 
   defer sqlStatement.Close();
@@ -84,6 +97,7 @@ func findComputer(db *sql.DB, serial string) {
   if rowErr != nil {
     if rowErr == sql.ErrNoRows {
       fmt.Println("No row. ", rowErr);
+      return rowErr;
     }
     fmt.Println(rowErr);
   }
@@ -94,9 +108,10 @@ func findComputer(db *sql.DB, serial string) {
 
   // Set Scan1 as computer for later validation of both scans
   scanned.Scan1 = computer;
+  return nil;
 }
 
-func findResident(db *sql.DB, mdoc int) {
+func findResident(db *sql.DB, mdoc int) error {
   var resident structs.Resident;
 
   fmt.Println("Finding Resident");
@@ -104,6 +119,7 @@ func findResident(db *sql.DB, mdoc int) {
   sqlStatement, prepErr := db.Prepare("SELECT mdoc, name_of_r FROM residents WHERE mdoc = ?");
   if prepErr != nil {
     fmt.Println("Error: Prepare ", prepErr);
+    return prepErr;
   }
 
   defer sqlStatement.Close()
@@ -114,6 +130,7 @@ func findResident(db *sql.DB, mdoc int) {
   if rowErr != nil {
     if rowErr == sql.ErrNoRows {
       fmt.Println("Error: No row. ", rowErr);
+      return rowErr;
     } else {
       fmt.Println("Error: Row scan error: ", rowErr);
     }
@@ -122,6 +139,7 @@ func findResident(db *sql.DB, mdoc int) {
   fmt.Println(resident.Name_of)
 
   scanned.Scan2 = resident;
+  return nil;
 }
 
 

@@ -59,7 +59,6 @@ func ReadComputersIntoDb(db *sql.DB) error {
 
 func parseComputers(info string) []string {
   words := strings.Fields(info);
-  fmt.Println(len(words[0]))
   if len(words) != 2 {
     fmt.Println("Error: Less than 2");
     return nil;

@@ -19,6 +19,7 @@ type Scans struct {
 }
 
 var scanned Scans = Scans{}
+var currentSignOuts []string
 
 func ProcessScan(db *sql.DB) {
 
@@ -58,13 +59,28 @@ func ProcessScan(db *sql.DB) {
         if res, ok := scanned.Scan2.(structs.Resident); ok {
           if comp, ok := scanned.Scan1.(structs.Computer); ok {
             fmt.Println("Setup for Api");
-            updateErr := updateDbWithScans(db, res, comp);
+            updateErr := updateDbWithScans(db, &res, &comp);
             if updateErr != nil {
               fmt.Println("Failed to update");
             }
-            data := fmt.Sprintf("\nResident name: %s, MDOC: %d, Computer s/n: %s, Computer tag number: %d, Time issued: %s, Time returned: %s", res.Name_of, res.Mdoc, comp.Serial, comp.Tag_number, comp.Time_issued, comp.Time_returned);
-            WriteComputerLogs(data);
-            fmt.Println("Signed out to:", res.Name_of, "| Computer number:", comp.Tag_number);  
+            data := fmt.Sprintf("Resident name: %s, MDOC: %d, Computer s/n: %s, Computer tag number: %d, Time issued: %s, Time returned: %s\n", res.Name_of, res.Mdoc, comp.Serial, comp.Tag_number, comp.Time_issued, comp.Time_returned);
+            WriteComputerLogs(data, "history");
+            currentSignOuts = updateCurrentSignOuts(currentSignOuts, data);
+            rmErr := os.Remove("./signedout.txt");
+            if rmErr != nil {
+              fmt.Println("Error: Remove signedout", rmErr);
+              return;
+            }
+            so, createErr := os.Create("signedout.txt");
+            if createErr != nil {
+              fmt.Println("ERRRRRRR");
+              return;
+            }
+            so.Close(); 
+            for _, v := range currentSignOuts {
+              WriteComputerLogs(v, "signedout");
+            }
+
           } else {
           fmt.Println("Error: Wrong combination of scans");
           }
@@ -74,6 +90,7 @@ func ProcessScan(db *sql.DB) {
         fmt.Println("Error: Default wrong combination of scans");
       }
   }
+
 } 
 
 func findComputer(db *sql.DB, serial string) error {
@@ -149,7 +166,7 @@ func findResident(db *sql.DB, mdoc int) error {
   return nil;
 }
 
-func updateDbWithScans(db *sql.DB, res structs.Resident, comp structs.Computer) error {
+func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer) error {
   currentTime := time.Now();
   formattedTime := currentTime.Format("2006-01-02 15:04:05");
 
@@ -176,7 +193,7 @@ func updateDbWithScans(db *sql.DB, res structs.Resident, comp structs.Computer) 
 
   } else if !comp.Is_issued {
     comp.Is_issued = true;
-    comp.Signed_out_to = res;
+    comp.Signed_out_to = *res;
     comp.Time_issued = formattedTime;
 
     sqlStatement, prepErr := db.Prepare("UPDATE computers SET is_issued = 1, Signed_out_to = ?, time_issued = ? WHERE serial = ?");
@@ -198,4 +215,15 @@ func updateDbWithScans(db *sql.DB, res structs.Resident, comp structs.Computer) 
   }  
   
     return nil;
+}
+
+func updateCurrentSignOuts(currentSignOuts []string, data string) []string {
+  for i, v := range currentSignOuts {
+    if v[:20] == data[:20] {
+      currentSignOuts = append(currentSignOuts[:i], currentSignOuts[i+1:]...);
+      return currentSignOuts;
+    }
+  }
+  currentSignOuts = append(currentSignOuts, data);
+  return currentSignOuts;
 }

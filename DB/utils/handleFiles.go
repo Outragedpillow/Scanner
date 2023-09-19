@@ -13,10 +13,11 @@ import (
 )
 
 const (
-  COMPUTERFILE = "./utils/computers.txt"
-  RESIDENT_FILE = "./utils/residents.txt"
-  HISTORY_FILE = "./utils/history.txt"
+  COMPUTERFILE = "./computers.txt"
+  RESIDENT_FILE = "./residents.txt"
+  HISTORY_FILE = "./history.txt"
   STORAGE_DB_FILE = "./Storage.db"
+  SIGNED_OUT_FILE = "./signedout.txt"
 )
 
 func DeleteStorageDb() error {
@@ -142,6 +143,7 @@ func insertResidentData(db *sql.DB, info []string) error {
     return prepErr;
   }
 
+
   defer sqlStatement.Close();
 
   _, execErr := sqlStatement.Exec(name_of, mdoc);
@@ -152,17 +154,31 @@ func insertResidentData(db *sql.DB, info []string) error {
   return nil;
 }
 
-func WriteComputerLogs(data string) {
-  file, openErr := os.OpenFile(HISTORY_FILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644);
-  if openErr != nil {
-    fmt.Println("Error: Open file ", openErr);
-  }
+func WriteComputerLogs(data string, fileName string) {
+  if fileName == "history" {
+    file, openErr := os.OpenFile(HISTORY_FILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644);
+    if openErr != nil {
+      fmt.Println("Error: Open file ", openErr);
+    }
 
-  defer file.Close();
-   
-  _, writeErr := file.WriteString(data);
-  if writeErr != nil {
-    fmt.Println("Error: Write file, ", writeErr)
+    defer file.Close();
+     
+    _, writeErr := file.WriteString(data);
+    if writeErr != nil {
+      fmt.Println("Error: Write file, ", writeErr)
+    }
+  } else if fileName == "signedout" {
+      file, openErr := os.OpenFile(SIGNED_OUT_FILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644);
+      if openErr != nil {
+        fmt.Println("Error: Open file ", openErr);
+      }
+
+      defer file.Close();
+       
+      _, writeErr := file.WriteString(data);
+      if writeErr != nil {
+        fmt.Println("Error: Write file, ", writeErr)
+      }
   }
 
 }

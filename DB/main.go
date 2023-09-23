@@ -12,6 +12,10 @@ func main() {
     fmt.Println("Error: Deleting Storage")
     return;
   }
+  rmSignedoutErr := utils.DeleteSignedout();
+  if rmSignedoutErr != nil {
+    fmt.Println("Error: Remove signedout.txt ", rmSignedoutErr);
+  }
 
   db, tableErr := sqlite.CreateTables();
   if tableErr != nil {

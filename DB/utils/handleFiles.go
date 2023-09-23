@@ -32,6 +32,35 @@ func DeleteStorageDb() error {
   return nil;
 }
 
+func DeleteSignedout() error {
+  _, statErr := os.Stat(SIGNED_OUT_FILE);
+  if statErr == nil {
+    rmErr := os.Remove("./signedout.txt");
+      if rmErr != nil {
+        fmt.Println("Error: Remove signedout", rmErr);
+        return rmErr;
+      }
+      signedout, createErr := os.Create("signedout.txt");
+      if createErr != nil {
+        fmt.Println("ERRRRRRR");
+        return createErr;
+      }
+      signedout.Close();
+      return nil;
+  } else if os.IsNotExist(statErr) {
+    signedout, createErr := os.Create("signedout.txt");
+    if createErr != nil {
+      fmt.Println("ERRRRRRR");
+      return createErr;
+    }
+    signedout.Close();
+    return nil;
+  } else {
+    fmt.Println("Error: ", statErr);
+    return statErr;
+  }
+}
+
 
 func ReadFilesIntoDb(db *sql.DB) {
   ReadResidentsIntoDb(db);

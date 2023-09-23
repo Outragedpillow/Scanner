@@ -19,7 +19,7 @@ type Scans struct {
 }
 
 var scanned Scans = Scans{}
-var currentSignOuts []string
+var CurrentSignOuts []string
 
 func ProcessScan(db *sql.DB) {
 
@@ -65,25 +65,16 @@ func ProcessScan(db *sql.DB) {
             }
             data := fmt.Sprintf("Resident name: %s, MDOC: %d, Computer s/n: %s, Computer tag number: %d, Time issued: %s, Time returned: %s\n", res.Name_of, res.Mdoc, comp.Serial, comp.Tag_number, comp.Time_issued, comp.Time_returned);
             WriteComputerLogs(data, "history");
-            currentSignOuts = updateCurrentSignOuts(currentSignOuts, data);
-            rmErr := os.Remove("./signedout.txt");
-            if rmErr != nil {
-              fmt.Println("Error: Remove signedout", rmErr);
-              return;
-            }
-            so, createErr := os.Create("signedout.txt");
-            if createErr != nil {
-              fmt.Println("ERRRRRRR");
-              return;
-            }
-            so.Close(); 
-            for _, v := range currentSignOuts {
+            CurrentSignOuts = updateCurrentSignOuts(CurrentSignOuts, data); 
+            for _, v := range CurrentSignOuts {
               WriteComputerLogs(v, "signedout");
             }
 
           } else {
           fmt.Println("Error: Wrong combination of scans");
           }
+        } else {
+          fmt.Println("Error: Default wrong combination of scans");
         }
 
       default:
@@ -128,7 +119,6 @@ func findComputer(db *sql.DB, serial string) error {
   
   fmt.Println(computer.Tag_number);
   
-  // tagNumberStr := strconv.Itoa(computer.Tag_number);
 
   // Set Scan1 as computer for later validation of both scans
   scanned.Scan1 = computer;
@@ -218,12 +208,12 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
 }
 
 func updateCurrentSignOuts(currentSignOuts []string, data string) []string {
-  for i, v := range currentSignOuts {
-    if v[:20] == data[:20] {
-      currentSignOuts = append(currentSignOuts[:i], currentSignOuts[i+1:]...);
-      return currentSignOuts;
+  for i, v := range CurrentSignOuts {
+    if v[:31] == data[:31] {
+      CurrentSignOuts = append(CurrentSignOuts[:i], CurrentSignOuts[i+1:]...);
+      return CurrentSignOuts;
     }
   }
-  currentSignOuts = append(currentSignOuts, data);
-  return currentSignOuts;
+  CurrentSignOuts = append(CurrentSignOuts, data);
+  return CurrentSignOuts;
 }

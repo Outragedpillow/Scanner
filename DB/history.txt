@@ -1,2 +1,5 @@
-Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: 2023-09-23 23:15:40, Time returned: 
-Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFG5, Computer tag number: 150, Time issued: 2023-09-23 23:19:53, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: 2023-09-24 08:37:23, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: , Time returned: 2023-09-24 08:37:41
+Resident name: Adams Danny, MDOC: 82921, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: 2023-09-24 08:38:35, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: 2023-09-24 08:40:12, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: , Time returned: 2023-09-24 08:40:19

@@ -167,7 +167,7 @@ func insertResidentData(db *sql.DB, info []string) error {
   }
 
   name_of := info[0] + " " + info[1];
-  sqlStatement, prepErr := db.Prepare("INSERT INTO residents (name_of_r, mdoc) values (?, ?)");
+  sqlStatement, prepErr := db.Prepare("INSERT INTO residents (name_of_r, mdoc, has_computer) values (?, ?, ?)");
   if prepErr != nil {
     return prepErr;
   }
@@ -175,7 +175,7 @@ func insertResidentData(db *sql.DB, info []string) error {
 
   defer sqlStatement.Close();
 
-  _, execErr := sqlStatement.Exec(name_of, mdoc);
+  _, execErr := sqlStatement.Exec(name_of, mdoc, 0);
   if execErr != nil {
     return execErr;
   }

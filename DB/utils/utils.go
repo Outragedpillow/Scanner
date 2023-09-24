@@ -59,7 +59,6 @@ func ProcessScan(database *structs.Database) {
       case structs.Computer:
         if res, ok := scanned.Scan2.(structs.Resident); ok {
           if comp, ok := scanned.Scan1.(structs.Computer); ok {
-
             // Add checks before continuing
             pass := checkComputerStatus(database, comp.Serial, res.Mdoc);
             switch pass {
@@ -82,7 +81,7 @@ func ProcessScan(database *structs.Database) {
                 WriteComputerLogs(v, "signedout");
               }
             default:
-              fmt.Println("Error:")
+              fmt.Println("Error: Default pass")
             }
           } else {
           fmt.Println("Error: Scan1 wrong combination of scans");
@@ -173,28 +172,32 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
   currentTime := time.Now();
   formattedTime := currentTime.Format("2006-01-02 15:04:05");
 
-  if comp.Is_issued {
-    comp.Is_issued = false;
-    // comp.Signed_out_to = structs.Resident{};
-    comp.Time_returned = formattedTime;
 
-    sqlStatement, prepErr := db.Prepare("UPDATE computers SET is_issued = 0, signed_out_to = NULL, time_returned = ? WHERE serial = ?");
-    if prepErr != nil {
-      fmt.Println("Error: Prepare is_issued true ", prepErr);
-      return prepErr;
-    }
+  err := func() error {
 
-    defer sqlStatement.Close();
+    if comp.Is_issued {
+      fmt.Println("SIGNING OUT");
+      comp.Is_issued = false;
+      comp.Time_returned = formattedTime;
 
-    _, execErr := sqlStatement.Exec(formattedTime, comp.Serial);
-    if execErr != nil {
-      fmt.Println("Error: Exec is_issued true ", execErr);
-      return execErr;
-    }
+      sqlStatement, prepErr := db.Prepare("UPDATE computers SET is_issued = 0, signed_out_to = NULL, time_returned = ? WHERE serial = ?");
+      if prepErr != nil {
+        fmt.Println("Error: Prepare is_issued true ", prepErr);
+        return prepErr;
+      }
 
-    return nil;
+      defer sqlStatement.Close();
+
+      _, execErr := sqlStatement.Exec(formattedTime, comp.Serial);
+      if execErr != nil {
+        fmt.Println("Error: Exec is_issued true ", execErr);
+        return execErr;
+      }
+
+      return nil;
 
   } else if !comp.Is_issued {
+    fmt.Println("SIGNING IN");
     comp.Is_issued = true;
     comp.Signed_out_to = *res;
     comp.Time_issued = formattedTime;
@@ -215,9 +218,67 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
 
     return nil;
     
-  }  
+    } else {
+      return fmt.Errorf("Unsure what happened");
+    } 
+  }();
+
+  err2 := func() error {
+    if res.Has_computer {
+      res.Has_computer = false;
+      res.Issued_computer = "";
+      comp.Signed_out_to.Mdoc = 0;
+
+      sqlStatement, prepErr := db.Prepare("UPDATE residents SET has_computer = 0, issued_computer = '' WHERE mdoc = ?");
+      if prepErr != nil {
+        fmt.Println("Error: Prepare has_computer true ", prepErr);
+        return prepErr;
+      }
+
+      defer sqlStatement.Close();
+
+      _, execErr := sqlStatement.Exec(res.Mdoc);
+      if execErr != nil {
+        fmt.Println("Error: Exec has_computer true ", execErr);
+        return execErr;
+      }
+
+      return nil;
+
+    } else if !res.Has_computer {
+      res.Has_computer = true;
+      res.Issued_computer = comp.Serial;
+      comp.Signed_out_to.Mdoc = res.Mdoc;
+
+      sqlStatement, prepErr := db.Prepare("UPDATE residents SET has_computer = 1, issued_computer = ? WHERE mdoc = ?");
+      if prepErr != nil {
+        fmt.Println("Error: Prepare has_computer false, ", prepErr);
+        return prepErr;
+      }
+
+      defer sqlStatement.Close();
+
+      _, execErr := sqlStatement.Exec(comp.Serial, res.Mdoc);
+      if execErr != nil {
+        fmt.Println("Error: Exec has_computer false, ", execErr);
+        return execErr;
+      }
+
+      return nil;
+
+    } else {
+      fmt.Println("Also not sure what happened")
+      return nil;
+    } 
+  }();   
   
+  if err == nil && err2 == nil {
     return nil;
+  } else if err != nil {
+    return err
+  } else {
+    return err2;
+  }
 }
 
 func updateCurrentSignOuts(currentSignOuts []string, data string) []string {
@@ -232,32 +293,74 @@ func updateCurrentSignOuts(currentSignOuts []string, data string) []string {
 }
 
 func checkComputerStatus(db *structs.Database, serial string, mdoc int) (pass int) {
-  // check if signed out
-  signedout, soErr := db.IsSignedout(serial);
-  // if no errors 
-  if soErr == nil {
-    switch signedout {
-    case 0:
-      return 1 /* true */;
-    case 1:
-      signed_out_to, signed_out_to_Err := db.IsSignedoutTo(serial);
-      if signed_out_to_Err == nil {
-        if signed_out_to.Mdoc != mdoc {
-          return 0 /* false */;
+
+  check1 := func() int {
+    signedout, soErr := db.IsSignedout(serial);
+    // if no errors 
+    if soErr == nil {
+      switch signedout {
+      case 0:
+        return 1 /* true */;
+      case 1:
+        signed_out_to, signed_out_to_Err := db.IsSignedoutTo(serial);
+        fmt.Println(signed_out_to.Name_of, signed_out_to.Mdoc)
+        if signed_out_to_Err == nil {
+          if signed_out_to.Mdoc != mdoc {
+            return 0 /* false */;
+          } else {
+            return 1 /* true */;
+          }
         } else {
-          return 1 /* true */;
+          fmt.Println("Error: IsSignedoutTo failed");
+          return -1 /* error */
         }
-      } else {
-        fmt.Println("Error: IsSignedoutTo failed");
+      default:
+        fmt.Println("Error: Default signedout is -1");
         return -1 /* error */
       }
-    default:
-      fmt.Println("Error: Default signedout is -1");
+    } else {
+      fmt.Println("Error: IsSignedout failed");
       return -1 /* error */
     }
+  }();
+
+  check2 := func() int {
+    has_computer, hasErr := db.HasComputer(mdoc);
+    // if no errors 
+    if hasErr == nil {
+      switch has_computer {
+      case 0:
+        return 1 /* true */;
+      case 1:
+        has_computer_number, has_computer_Err := db.HasComputerNumber(mdoc);
+        if has_computer_Err == nil {
+          if has_computer_number.Serial != serial {
+            return 0 /* false */;
+          } else {
+            return 1 /* true */;
+          }
+        } else {
+          fmt.Println("Error: IsSignedoutTo failed", has_computer_Err);
+          return -1 /* error */
+        }
+      default:
+        fmt.Println("Error: Default signedout is -1");
+        return -1 /* error */
+      }
+    } else {
+      fmt.Println("Error: IsSignedout failed");
+      return -1 /* error */
+    }
+  }();
+
+  if check1 == 1 && check2 == 1 {
+    return 1;
+  } else if check1 == -1 || check2 == -1 {
+    return -1;
   } else {
-    fmt.Println("Error: IsSignedout failed");
-    return -1 /* error */
+    return 0;
   }
+
 }
+
 // continuing

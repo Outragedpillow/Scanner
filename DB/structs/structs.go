@@ -12,6 +12,8 @@ type Database struct {
 type Resident struct {
   Mdoc int `json:"mdoc"`
   Name_of string `json:"name_of"`
+  Has_computer bool `json:"has_computer"`
+  Issued_computer string `json:"Issued_computer"`
 }
 
 type Computer struct {
@@ -51,7 +53,10 @@ func (database *Database) CreateTables() error {
 
   _, err = database.Conn.Exec(`CREATE TABLE IF NOT EXISTS residents (
     name_of_r TEXT NOT NULL,
-    mdoc INTEGER PRIMARY KEY NOT NULL);
+    mdoc INTEGER PRIMARY KEY NOT NULL,
+    has_computer INTEGER NOT NULL,
+    issued_computer TEXT
+    );
   `);
   if err != nil {
     fmt.Println("Create Table Error: Residents.", err);
@@ -60,8 +65,8 @@ func (database *Database) CreateTables() error {
 
   _, err = database.Conn.Exec(`CREATE TABLE IF NOT EXISTS computers (
     serial TEXT PRIMARY KEY NOT NULL,
-    tag_number INT NOT NULL,
-    is_issued INT NOT NULL,
+    tag_number INTEGER NOT NULL,
+    is_issued INTEGER NOT NULL,
     signed_out_to INTEGER,
     time_issued TIMESTAMP,
     time_returned TIMESTAMP,
@@ -80,7 +85,7 @@ func (database *Database) CreateTables() error {
       BEGIN 
         SELECT CASE 
             WHEN NEW.is_issued = 1 AND (NEW.signed_out_to IS NULL) THEN
-              RAISE (ABORT, 'CANNOT ISSUE WITHOUT VALUES FOR signed_out_to and signed_out_by.')
+              RAISE (ABORT, 'CANNOT ISSUE WITHOUT VALUES FOR signed_out_to.')
         END;
       END;
     `);
@@ -134,6 +139,50 @@ func (database *Database) IsSignedoutTo(serial string) (Resident, error) {
   }
 
   return resident, nil;
+}
+
+func (database *Database) HasComputer(mdoc int) (int, error) {
+  var has_computer int;
+
+  sqlStatement, prepErr := database.Conn.Prepare("SELECT has_computer FROM residents WHERE mdoc = ?");
+  if prepErr != nil {
+    return -1, fmt.Errorf("Error: Prepare statement, %v", prepErr);
+  }
+
+  defer sqlStatement.Close();
+
+  queryErr := sqlStatement.QueryRow(mdoc).Scan(&has_computer);
+  if queryErr != nil {
+    if queryErr == sql.ErrNoRows {
+      return -1, fmt.Errorf("Error: Query no rows, %v", queryErr);
+    } else {
+      return -1, fmt.Errorf("Error: Query statement, %v", queryErr);
+    }
+  }
+
+  return has_computer, nil;
+}
+
+func (database *Database) HasComputerNumber(mdoc int) (Computer, error) {
+  var computer Computer;
+
+  sqlStatement, prepErr := database.Conn.Prepare("SELECT serial FROM computers WHERE signed_out_to = ?");
+  if prepErr != nil {
+    return computer, fmt.Errorf("Error: Prepare statement, %v", prepErr);
+  }
+
+  defer sqlStatement.Close();
+
+  queryErr := sqlStatement.QueryRow(mdoc).Scan(&computer.Serial);
+  if queryErr != nil {
+    if queryErr == sql.ErrNoRows {
+      return computer, fmt.Errorf("Error: Scan no rows, %v", queryErr);
+    } else {
+      return computer, fmt.Errorf("Error: Query statement, %v", queryErr);
+    }
+  }
+
+  return computer, nil;
 }
 
 func ResidentIsEmpty(s Resident) bool {

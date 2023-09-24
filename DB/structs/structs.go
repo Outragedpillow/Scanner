@@ -164,26 +164,29 @@ func (database *Database) HasComputer(mdoc int) (int, error) {
 }
 
 func (database *Database) HasComputerNumber(mdoc int) (Computer, error) {
-  var computer Computer;
+    var computer Computer
 
-  sqlStatement, prepErr := database.Conn.Prepare("SELECT serial FROM computers WHERE signed_out_to = ?");
-  if prepErr != nil {
-    return computer, fmt.Errorf("Error: Prepare statement, %v", prepErr);
-  }
-
-  defer sqlStatement.Close();
-
-  queryErr := sqlStatement.QueryRow(mdoc).Scan(&computer.Serial);
-  if queryErr != nil {
-    if queryErr == sql.ErrNoRows {
-      return computer, fmt.Errorf("Error: Scan no rows, %v", queryErr);
-    } else {
-      return computer, fmt.Errorf("Error: Query statement, %v", queryErr);
+    sqlStatement, prepErr := database.Conn.Prepare("SELECT serial FROM computers WHERE signed_out_to = ?")
+    if prepErr != nil {
+        return computer, fmt.Errorf("Error: Prepare statement, %v", prepErr)
     }
-  }
 
-  return computer, nil;
+    defer sqlStatement.Close()
+
+    queryErr := sqlStatement.QueryRow(mdoc).Scan(&computer.Serial)
+    if queryErr != nil {
+        if queryErr == sql.ErrNoRows {
+            // The computer is not signed out to the resident, which is fine.
+            // Return an empty computer struct to indicate that.
+            return computer, nil
+        } else {
+            return computer, fmt.Errorf("Error: Query statement, %v", queryErr)
+        }
+    }
+
+    return computer, nil
 }
+
 
 func ResidentIsEmpty(s Resident) bool {
   if s.Mdoc == 0 || s.Name_of == "" {

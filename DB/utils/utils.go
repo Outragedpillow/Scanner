@@ -335,6 +335,10 @@ func checkComputerStatus(db *structs.Database, serial string, mdoc int) (pass in
         has_computer_number, has_computer_Err := db.HasComputerNumber(mdoc);
         if has_computer_Err == nil {
           if has_computer_number.Serial != serial {
+            if has_computer_number.Serial == "" {
+              return 1;
+            }
+            fmt.Println("==", has_computer_number.Serial)
             return 0 /* false */;
           } else {
             return 1 /* true */;
@@ -356,6 +360,7 @@ func checkComputerStatus(db *structs.Database, serial string, mdoc int) (pass in
   if check1 == 1 && check2 == 1 {
     return 1;
   } else if check1 == -1 || check2 == -1 {
+    fmt.Println(check1, check2);
     return -1;
   } else {
     return 0;

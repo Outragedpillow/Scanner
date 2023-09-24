@@ -1,13 +1,15 @@
 package main
 
 import (
-  "Scanner/server"
-  "Scanner/sqlite"
-  "Scanner/utils"
-  "fmt" 
+	"Scanner/server"
+	"Scanner/structs"
+	"Scanner/utils"
+	"fmt"
 )
 
 func main() {
+  var db structs.Database;
+
   if deleteErr := utils.DeleteStorageDb(); deleteErr != nil {
     fmt.Println("Error: Deleting Storage")
     return;
@@ -17,13 +19,19 @@ func main() {
     fmt.Println("Error: Remove signedout.txt ", rmSignedoutErr);
   }
 
-  db, tableErr := sqlite.CreateTables();
-  if tableErr != nil {
-    fmt.Println("Failed to Create tables.")
-    return;
+  openDbErr := db.Open("Storage.db");
+  if openDbErr != nil {
+    panic(openDbErr);
   }
 
-  utils.ReadFilesIntoDb(db);
+  defer db.Close();
+
+  createErr := db.CreateTables();
+  if createErr != nil {
+    panic(createErr);
+  }
+   
+  utils.ReadFilesIntoDb(db.Conn);
 
   go func() {
     serverErr := server.Serve("1234");
@@ -33,7 +41,7 @@ func main() {
   }()
 
   go func() {
-    utils.ProcessScan(db);
+    utils.ProcessScan(&db);
   }();
 
   select{};

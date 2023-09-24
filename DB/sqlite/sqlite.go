@@ -29,15 +29,7 @@ func CreateTables() (*sql.DB, error) {
     return nil, err;
   }
   
-  _, err = database.Exec(`CREATE TABLE IF NOT EXISTS admin (
-    name_of_a TEXT PRIMARY KEY NOT NULL);
-  `);
-  if err != nil {
-    fmt.Println("Create Table Error: Admin.", err);
-    return nil, err;
-  }
-  
-    _, err = database.Exec(`CREATE TABLE IF NOT EXISTS computers (
+  _, err = database.Exec(`CREATE TABLE IF NOT EXISTS computers (
     serial TEXT PRIMARY KEY NOT NULL,
     tag_number INT NOT NULL,
     is_issued INT NOT NULL,
@@ -46,7 +38,6 @@ func CreateTables() (*sql.DB, error) {
     time_issued TIMESTAMP,
     time_returned TIMESTAMP,
     FOREIGN KEY(signed_out_to) REFERENCES residents(mdoc)
-    FOREIGN KEY(signed_out_by) REFERENCES admin(name_of_a)
     );
   `);
   if err != nil {

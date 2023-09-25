@@ -1,6 +1,9 @@
-Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: 2023-09-24 10:05:52, Time returned: 
-Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: , Time returned: 2023-09-24 10:05:59
-Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFG5, Computer tag number: 150, Time issued: 2023-09-24 10:06:09, Time returned: 
-Resident name: Adams Danny, MDOC: 82921, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: 2023-09-24 10:07:33, Time returned: 
-Resident name: Adams Danny, MDOC: 82921, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: , Time returned: 2023-09-24 10:08:42
-Resident name: Barnes Michael, MDOC: 109206, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: 2023-09-24 10:08:53, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: 2023-09-25 12:22:18, Time returned: 
+Resident name: Adams Danny, MDOC: 82921, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: 2023-09-25 12:22:27, Time returned: 
+Resident name: Bellavance Raymond, MDOC: 610, Computer s/n: R90YFFG5, Computer tag number: 150, Time issued: 2023-09-25 12:22:37, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: , Time returned: 2023-09-25 12:23:07
+Resident name: Bellavance Raymond, MDOC: 610, Computer s/n: R90YFFG5, Computer tag number: 150, Time issued: , Time returned: 2023-09-25 12:23:33
+Resident name: Adams Danny, MDOC: 82921, Computer s/n: R90YFFFF, Computer tag number: 143, Time issued: , Time returned: 2023-09-25 12:24:01
+Resident name: Bellavance Raymond, MDOC: 610, Computer s/n: R90YFFFD, Computer tag number: 142, Time issued: 2023-09-25 12:24:24, Time returned: 
+Resident name: Geary Samuel, MDOC: 151110, Computer s/n: R90YFFG6, Computer tag number: 151, Time issued: 2023-09-25 12:24:46, Time returned: 
+Resident name: Crucial Nguza-Saba, MDOC: 165257, Computer s/n: R90YFFG5, Computer tag number: 150, Time issued: 2023-09-25 12:25:36, Time returned: 

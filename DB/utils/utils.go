@@ -21,9 +21,8 @@ type Scans struct {
 var scanned Scans = Scans{}
 var CurrentSignOuts []string
 
-func ProcessScan(database *structs.Database) {
+func ProcessScan(database *structs.Database, db *sql.DB) {
 
-  db := database.Conn;
   scanner := bufio.NewScanner(os.Stdin);
   for { 
     scanned = Scans{};
@@ -282,10 +281,13 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
 }
 
 func updateCurrentSignOuts(currentSignOuts []string, data string) []string {
+  
   for i, v := range CurrentSignOuts {
-    if v[:31] == data[:31] {
-      CurrentSignOuts = append(CurrentSignOuts[:i], CurrentSignOuts[i+1:]...);
-      return CurrentSignOuts;
+    if len(v) > 31 { 
+      if v[:31] == data[:31] {
+        CurrentSignOuts = append(CurrentSignOuts[:i], CurrentSignOuts[i+1:]...);
+        return CurrentSignOuts;
+      }
     }
   }
   CurrentSignOuts = append(CurrentSignOuts, data);

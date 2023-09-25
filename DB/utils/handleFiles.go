@@ -3,7 +3,6 @@ package utils
 import ( 
     "bufio"
     "fmt"
-    //"log"
     "os"
     "strings"
     "strconv"
@@ -19,6 +18,61 @@ const (
   STORAGE_DB_FILE = "./Storage.db"
   SIGNED_OUT_FILE = "./signedout.txt"
 )
+
+func CheckForCrash() error {
+
+  fileInfo, infoErr := os.Stat(SIGNED_OUT_FILE);
+  if infoErr != nil {
+    if os.IsNotExist(infoErr) {
+      return infoErr;
+    }
+    return infoErr;
+  } 
+
+  if fileInfo.Size() > 0 {
+    var userInput string;
+    for {
+      fmt.Print("Continue from last know state? (y/n): ");
+      fmt.Scan(&userInput);
+
+      switch strings.ToUpper(userInput) {
+      case "Y", "YES":
+        backToSliceErr := readBackIntoSlice(&CurrentSignOuts);
+        if backToSliceErr != nil {
+          fmt.Println("Error: Failed to read back into slice");
+        }
+        return nil;
+      case "N", "NO":
+        return fmt.Errorf("Error: User chose not to recover");
+      default:
+        fmt.Println("Invalid option. Please Enter 'y'/'yes' or 'n'/'no'");
+      }
+    }
+  } else {
+    return fmt.Errorf("Error: File is empty");
+  }
+}
+
+func readBackIntoSlice(currentSlice *[]string) error {
+  file, openErr := os.OpenFile(SIGNED_OUT_FILE, os.O_RDONLY, 0);
+  if openErr != nil {
+    fmt.Println("Error: Opening signedout ", openErr);
+  }
+
+  defer file.Close();
+
+  scanner := bufio.NewScanner(file);
+  for scanner.Scan() {
+    input := scanner.Text();
+    *currentSlice = append(*currentSlice, input);
+  }
+
+  if scanner.Err() != nil {
+    return scanner.Err();
+  }
+
+  return nil;
+}
 
 func DeleteStorageDb() error {
   noneErr := os.Remove(STORAGE_DB_FILE);
@@ -204,7 +258,8 @@ func WriteComputerLogs(data string, fileName string) {
 
       defer file.Close();
        
-      _, writeErr := file.WriteString(data);
+      dataWithBreak := fmt.Sprintf("\n%s", data);
+      _, writeErr := file.WriteString(dataWithBreak);
       if writeErr != nil {
         fmt.Println("Error: Write file, ", writeErr)
       }

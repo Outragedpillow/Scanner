@@ -64,7 +64,6 @@ func ProcessScan(database *structs.Database, db *sql.DB) {
             case 0:
               fmt.Println("Error: Computer can only be signed in by same person who signed it out.");
             case 1:
-              fmt.Println("Setup for Api");
               updateErr := updateDbWithScans(db, &res, &comp);
               if updateErr != nil {
                 fmt.Println("Failed to update");
@@ -99,8 +98,6 @@ func ProcessScan(database *structs.Database, db *sql.DB) {
 func findComputer(db *sql.DB, serial string) error {
    var computer structs.Computer;
 
-  fmt.Println("finding Computer")
-
   // Split input to get just serial number
   index := strings.Index(serial, "R");
   if index != -1 {
@@ -129,7 +126,7 @@ func findComputer(db *sql.DB, serial string) error {
     fmt.Println("Error: Scan into computer", rowErr);
   }
   
-  fmt.Println(computer.Tag_number);
+  fmt.Println("Computer found:", computer.Tag_number);
   
   // Set Scan1 as computer for later validation of both scans
   scanned.Scan1 = computer;
@@ -138,8 +135,6 @@ func findComputer(db *sql.DB, serial string) error {
 
 func findResident(db *sql.DB, mdoc int) error {
   var resident structs.Resident;
-
-  fmt.Println("Finding Resident");
 
   sqlStatement, prepErr := db.Prepare("SELECT mdoc, name_of_r FROM residents WHERE mdoc = ?");
   if prepErr != nil {
@@ -161,7 +156,7 @@ func findResident(db *sql.DB, mdoc int) error {
     }
   }
 
-  fmt.Println(resident.Name_of)
+  fmt.Println("Resident found:", resident.Name_of);
 
   scanned.Scan2 = resident;
   return nil;
@@ -175,7 +170,6 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
   err := func() error {
 
     if comp.Is_issued {
-      fmt.Println("SIGNING OUT");
       comp.Is_issued = false;
       comp.Time_returned = formattedTime;
 
@@ -192,11 +186,19 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
         fmt.Println("Error: Exec is_issued true ", execErr);
         return execErr;
       }
+    
+    tag := strconv.Itoa(comp.Tag_number);
+    name := res.Name_of + ",";
+    tagFull := tag + ",";
+
+    fmt.Println("Resident:", name, "Computer:", tagFull, "successfully SIGNED IN.");
+    fmt.Println("-----------------------------------------------------------------------------------------------------------");
+    fmt.Println();
+
 
       return nil;
 
   } else if !comp.Is_issued {
-    fmt.Println("SIGNING IN");
     comp.Is_issued = true;
     comp.Signed_out_to = *res;
     comp.Time_issued = formattedTime;
@@ -215,6 +217,13 @@ func updateDbWithScans(db *sql.DB, res *structs.Resident, comp *structs.Computer
       return execErr;
     }
 
+    tag := strconv.Itoa(comp.Tag_number);
+    name := res.Name_of + ",";
+    tagFull := tag + ",";
+
+  fmt.Println("Resident:", name, "Computer:", tagFull, "successfully SIGNED OUT.");
+    fmt.Println("-----------------------------------------------------------------------------------------------------------");
+    fmt.Println();
     return nil;
     
     } else {

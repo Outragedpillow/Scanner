@@ -1,23 +1,50 @@
 package utils
 
-import ( 
-    "bufio"
-    "fmt"
-    "os"
-    "strings"
-    "strconv"
-    "database/sql"
-    _ "github.com/mattn/go-sqlite3"
-    "errors"
+import (
+	"bufio"
+	"database/sql"
+	"errors"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+  "path/filepath"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
   COMPUTERFILE = "./computers.txt"
   RESIDENT_FILE = "./residents.txt"
-  HISTORY_FILE = "./history.txt"
   STORAGE_DB_FILE = "./Storage.db"
   SIGNED_OUT_FILE = "./signedout.txt"
-)
+);
+
+var HISTORY_FILE = "history/default.txt";
+
+
+func HandleHistoryFiles() error {
+    date := time.Now().Format("01-02-2006")
+    fileName := filepath.Join("./history", date+".txt")
+
+    _, fileInfoErr := os.Stat(fileName)
+    if fileInfoErr != nil {
+        if os.IsNotExist(fileInfoErr) {
+            newFile, createFileErr := os.Create(fileName)
+            if createFileErr != nil {
+                panic(createFileErr)
+            }
+            defer newFile.Close()
+        } else {
+            fmt.Println("Error: Non-nil file stat error:", fileInfoErr);
+            return fileInfoErr
+        }
+    }
+
+    HISTORY_FILE = fileName
+    return nil
+}
 
 func CheckForCrash() error {
 
@@ -41,8 +68,17 @@ func CheckForCrash() error {
         if backToSliceErr != nil {
           fmt.Println("Error: Failed to read back into slice");
         }
+
+        historyErr := HandleHistoryFiles();
+        if historyErr != nil {
+          return historyErr;
+        }
         return nil;
       case "N", "NO":
+        historyErr := HandleHistoryFiles();
+        if historyErr != nil {
+          return historyErr;
+        }
         return fmt.Errorf("Error: User chose not to recover");
       default:
         fmt.Println("Invalid option. Please Enter 'y'/'yes' or 'n'/'no'");
@@ -239,8 +275,7 @@ func insertResidentData(db *sql.DB, info []string) error {
 
 func WriteComputerLogs(data string, fileName string) {
   if fileName == "history" {
-    file, openErr := os.OpenFile(HISTORY_FILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644);
-    if openErr != nil {
+    file, openErr := os.OpenFile(HISTORY_FILE, os.O_WRONLY|os.O_APPEND, 0644); if openErr != nil {
       fmt.Println("Error: Open file ", openErr);
     }
 
